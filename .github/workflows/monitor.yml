@@ -49,8 +49,8 @@ jobs:
             echo "Cookie 已从 B64 恢复"
           elif [ -n "$SEATS_AERO_COOKIES" ]; then
             echo "已配置 SEATS_AERO_COOKIES"
-          else
-            echo "::warning::未设置 Cookie 或 Storage State，查票可能失败"
+          elif [ ! -f storage_state.json ]; then
+            echo "::warning::未设置 PLAYWRIGHT_STORAGE_STATE，查票可能失败"
           fi
 
       - name: Run monitor

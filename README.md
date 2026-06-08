@@ -99,6 +99,28 @@ git push -u origin main
 
 > 免费 Server酱 每天约 5 条推送；只有**发现新票**才消耗，正常够用。
 
+### ⚠️ GitHub 云端跑的限制
+
+GitHub 免费服务器的 IP 常被 seats.aero 的 Cloudflare **直接拦截**，即使导入了登录态也可能 403。  
+若 Actions 报错 `Sorry, you have been blocked`，属于正常现象，不是配置错了。
+
+**关机还要监控的替代方案：**
+
+1. **seats.aero 网页免费 Alert**（最省事，他们服务器查票）
+2. **腾讯云/阿里云轻量服务器**（约 ¥30/月，跑同一套脚本）
+3. **Mac 自托管 GitHub Runner**（电脑开着时自动查，见下方）
+
+#### Mac 自托管 Runner（电脑开着即可，不用关终端）
+
+```bash
+# 在 Mac 上一次性安装
+gh api repos/outtaMEL/sin-per-award-monitor/actions/runners/registration-token --method POST
+# 按 GitHub 页面提示下载 runner，或访问：
+# https://github.com/outtaMEL/sin-per-award-monitor/settings/actions/runners/new
+```
+
+把 workflow 的 `runs-on: ubuntu-latest` 改成 `runs-on: self-hosted` 后，用你家宽带的 IP 查票，成功率更高。
+
 ## 说明
 
 - seats.aero 数据有缓存延迟（通常数小时），有票后请**立即登录新航官网核实**
