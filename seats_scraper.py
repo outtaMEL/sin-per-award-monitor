@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
-import requests
 from playwright.sync_api import BrowserContext, Page, sync_playwright
 
 SINGAPORE_EXPLORE_URL = "https://seats.aero/singapore"
@@ -114,22 +113,6 @@ def _build_api_url(
         "ex": "false",
     }
     return f"https://seats.aero{API_PATH}?{urlencode(params)}"
-
-
-def _fetch_api_requests(url: str, cookie_header: str) -> dict[str, Any]:
-    resp = requests.get(
-        url,
-        headers={
-            "Cookie": cookie_header,
-            "User-Agent": _USER_AGENT,
-            "Accept": "application/json",
-            "Referer": SINGAPORE_EXPLORE_URL,
-        },
-        timeout=30,
-    )
-    if resp.status_code != 200:
-        raise RuntimeError(f"API {resp.status_code}: {resp.text[:300]}")
-    return resp.json()
 
 
 def _fetch_api_page(page: Page, url: str) -> dict[str, Any]:
@@ -240,47 +223,11 @@ def fetch_krisflyer_business_saver(
     max_business_miles: int,
     browser_data_dir: Path,
     headless: bool,
-    storage_state_path: Path | None = None,
-    cookie_header: str | None = None,
 ) -> list[AwardHit]:
-    """通过 Playwright 或 Cookie 调用 seats.aero 内部 API，返回 Business Saver 命中。"""
-    if cookie_header:
-        fetch_json = lambda url: _fetch_api_requests(url, cookie_header)  # noqa: E731
-        return _collect_all_regions(
-            fetch_json,
-            origin=origin,
-            destination=destination,
-            date_start=date_start,
-            date_end=date_end,
-            max_business_miles=max_business_miles,
-        )
+    """通过 Playwright 会话调用 seats.aero 内部 API，返回 Business Saver 命中。"""
+    browser_data_dir.mkdir(parents=True, exist_ok=True)
 
     with sync_playwright() as p:
-        if storage_state_path and storage_state_path.exists():
-            browser = p.chromium.launch(headless=headless)
-            context = browser.new_context(
-                storage_state=str(storage_state_path),
-                viewport={"width": 1280, "height": 900},
-                user_agent=_USER_AGENT,
-            )
-            try:
-                page = context.new_page()
-                page.goto(SINGAPORE_EXPLORE_URL, wait_until="domcontentloaded", timeout=60_000)
-                page.wait_for_timeout(3_000)
-                fetch_json = lambda url: _fetch_api_page(page, url)  # noqa: E731
-                return _collect_all_regions(
-                    fetch_json,
-                    origin=origin,
-                    destination=destination,
-                    date_start=date_start,
-                    date_end=date_end,
-                    max_business_miles=max_business_miles,
-                )
-            finally:
-                context.close()
-                browser.close()
-
-        browser_data_dir.mkdir(parents=True, exist_ok=True)
         context: BrowserContext = p.chromium.launch_persistent_context(
             user_data_dir=str(browser_data_dir),
             headless=headless,

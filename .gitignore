@@ -1,7 +1,6 @@
 .venv/
 .playwright-browsers/
 .browser_data/
-storage_state.json
 .env
 .monitor_state.json
 __pycache__/

@@ -53,13 +53,6 @@ def run_once(state_file: Path) -> int:
     max_miles = int(_env("MAX_BUSINESS_MILES", "70000"))
     browser_dir = Path(_env("BROWSER_DATA_DIR", ".browser_data"))
     headless = _env("HEADLESS", "false").lower() in {"1", "true", "yes"}
-    if _env("GITHUB_ACTIONS").lower() == "true":
-        storage_state = Path("storage_state.json")
-        storage_state = storage_state if storage_state.exists() else None
-    else:
-        state_path = _env("STORAGE_STATE_PATH")
-        storage_state = Path(state_path) if state_path and Path(state_path).exists() else None
-    cookie_header = _env("SEATS_AERO_COOKIES") or None
 
     notify = _notify_config()
     if not any(
@@ -87,8 +80,6 @@ def run_once(state_file: Path) -> int:
         max_business_miles=max_miles,
         browser_data_dir=browser_dir,
         headless=headless,
-        storage_state_path=storage_state,
-        cookie_header=cookie_header,
     )
 
     message = format_hits(hits)
